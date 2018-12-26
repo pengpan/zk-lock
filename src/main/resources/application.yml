@@ -1,0 +1,4 @@
+zookeeper:
+  connectString: 192.168.1.142:2181   #zookeeper地址
+  namespace: zk_lock                  #zk名称空间
+  sessionTimeoutMs: 5000              #session超时时间
