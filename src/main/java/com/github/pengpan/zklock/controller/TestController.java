@@ -1,11 +1,8 @@
 package com.github.pengpan.zklock.controller;
 
 import com.github.pengpan.zklock.lock.ZkDistributedLock;
-import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,18 +19,6 @@ public class TestController {
 
     private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
-    @Value("${zookeeper.connectString}")
-    private String connectString;
-
-    @Value("${zookeeper.sessionTimeoutMs}")
-    private int sessionTimeoutMs;
-
-    @Value("${zookeeper.namespace}")
-    private String namespace;
-
-    @Autowired
-    private CuratorFramework cf;
-
     @RequestMapping("lock")
     public String lock() {
         ZkDistributedLock lock = new ZkDistributedLock();
@@ -43,7 +28,7 @@ public class TestController {
             executorService.execute(() -> {
                 try {
                     int i = integer.incrementAndGet();
-                    boolean acquire = lock.acquire(cf, "1992", 3, TimeUnit.SECONDS);
+                    boolean acquire = lock.acquire("1992", 3, TimeUnit.SECONDS);
                     if (acquire) {
                         log.info("-->获取到zk锁 --> || " + i);
                         Thread.sleep(500);
@@ -60,13 +45,12 @@ public class TestController {
         return null;
     }
 
-
     @RequestMapping("sec-kill/{redId}")
     public Map<String, Object> secKill(@PathVariable("redId") String redId) {
         ZkDistributedLock lock = new ZkDistributedLock();
         Map<String, Object> map = new HashMap<>();
         try {
-            boolean acquire = lock.acquire(cf, redId, 1, TimeUnit.SECONDS);
+            boolean acquire = lock.acquire(redId, 1, TimeUnit.SECONDS);
             if (!acquire) {
                 //快速失败 1秒还没有抢到红包锁
                 map.put("status", -1);

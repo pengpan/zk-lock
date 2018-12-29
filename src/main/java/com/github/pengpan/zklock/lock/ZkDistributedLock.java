@@ -19,12 +19,21 @@ public class ZkDistributedLock {
 
     private final ThreadLocal<Pair<InterProcessMutex, String>> threadLocal = new ThreadLocal<>();
 
+    private static CuratorFramework curatorFramework;
+
+    public ZkDistributedLock() {
+    }
+
+    public ZkDistributedLock(CuratorFramework curatorFramework) {
+        ZkDistributedLock.curatorFramework = curatorFramework;
+    }
+
     /**
      * 获取分布式锁  默认自旋 直到锁可用
      */
-    public boolean acquire(CuratorFramework cf, String lockKey) {
+    public boolean acquire(String lockKey) {
         try {
-            InterProcessMutex lock = new InterProcessMutex(cf, "/" + lockKey);
+            InterProcessMutex lock = new InterProcessMutex(curatorFramework, "/" + lockKey);
             lock.acquire();
             threadLocal.set(new Pair<>(lock, lockKey));
             return true;
@@ -37,9 +46,9 @@ public class ZkDistributedLock {
     /**
      * 获取分布式锁
      */
-    public boolean acquire(CuratorFramework cf, String lockKey, long time, TimeUnit unit) {
+    public boolean acquire(String lockKey, long time, TimeUnit unit) {
         try {
-            InterProcessMutex lock = new InterProcessMutex(cf, "/" + lockKey);
+            InterProcessMutex lock = new InterProcessMutex(curatorFramework, "/" + lockKey);
             if (lock.acquire(time, unit)) {
                 threadLocal.set(new Pair<>(lock, lockKey));
                 return true;
